@@ -42,6 +42,34 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool updateResidentNotes(String residentId, String newNotes) {
+    final index = _residents.indexWhere((resident) => resident.id == residentId);
+    if (index == -1) return false;
+
+    final current = _residents[index];
+    _residents[index] = Resident(
+      id: current.id,
+      name: current.name,
+      room: current.room,
+      dateOfBirth: current.dateOfBirth,
+      gender: current.gender,
+      careLevel: current.careLevel,
+      doctor: current.doctor,
+      status: current.status,
+      medicalConditions: current.medicalConditions,
+      allergies: current.allergies,
+      medications: current.medications,
+      emergencyContactName: current.emergencyContactName,
+      emergencyContactPhone: current.emergencyContactPhone,
+      notes: newNotes.trim(),
+      isNewAdmission: current.isNewAdmission,
+      dischargePlanned: current.dischargePlanned,
+    );
+
+    notifyListeners();
+    return true;
+  }
+
   bool dischargeResident(String residentId) {
     Resident? resident;
     for (final item in _residents) {
@@ -55,7 +83,7 @@ class AppState extends ChangeNotifier {
     _residents.removeWhere((item) => item.id == residentId);
     _tasks.removeWhere((task) => task.residentId == residentId);
     _alerts.removeWhere(
-      (alert) => alert.residentName.toLowerCase() == resident!.name.toLowerCase(),
+          (alert) => alert.residentName.toLowerCase() == resident!.name.toLowerCase(),
     );
     notifyListeners();
     return true;

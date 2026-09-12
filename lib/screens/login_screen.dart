@@ -13,7 +13,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'staff@agecare.com.au');
+  final _emailController = TextEditingController(text: '20036498.bivek@agecarekoi.com.au');
   final _passwordController = TextEditingController(text: 'agecare123');
   bool _obscurePassword = true;
   bool _rememberMe = true;
@@ -106,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 14),
                       const Text(
-                        'AgeCare',
+                        'AgeCare Resident',
                         style: TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.w900,
@@ -256,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 14),
             const Center(
               child: Text(
-                'Demo: staff@agecare.com.au  •  agecare123',
+                'Demo: 20036498.bivek@agecarekoi.com.au  •  agecare123',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 10.5,

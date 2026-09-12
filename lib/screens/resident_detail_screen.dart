@@ -5,7 +5,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/status_chip.dart';
 
-class ResidentDetailScreen extends StatelessWidget {
+class ResidentDetailScreen extends StatefulWidget {
   final AppState appState;
   final Resident resident;
 
@@ -15,6 +15,20 @@ class ResidentDetailScreen extends StatelessWidget {
     required this.resident,
   });
 
+  @override
+  State<ResidentDetailScreen> createState() => _ResidentDetailScreenState();
+}
+
+class _ResidentDetailScreenState extends State<ResidentDetailScreen> {
+  late Resident _currentResident;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentResident =
+        widget.appState.residentById(widget.resident.id) ?? widget.resident;
+  }
+
   String _date(DateTime value) {
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -23,7 +37,92 @@ class ResidentDetailScreen extends StatelessWidget {
     return '${value.day} ${months[value.month - 1]} ${value.year}';
   }
 
-  Future<void> _confirmDischarge(BuildContext context) async {
+  Future<void> _editNotes() async {
+    var draftNotes = _currentResident.notes;
+
+    final updatedNotes = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: const Text(
+          'Edit Notes',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        content: SizedBox(
+          width: 420,
+          child: TextFormField(
+            initialValue: draftNotes,
+            autofocus: true,
+            minLines: 4,
+            maxLines: 6,
+            textCapitalization: TextCapitalization.sentences,
+            onChanged: (value) => draftNotes = value,
+            decoration: InputDecoration(
+              hintText: 'Enter resident notes',
+              filled: true,
+              fillColor: const Color(0xFFF7F9FC),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFE1E8F0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFE1E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, draftNotes.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || updatedNotes == null) return;
+
+    final cleanNotes = updatedNotes.trim();
+    if (cleanNotes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Notes cannot be empty.')),
+      );
+      return;
+    }
+
+    final updated = widget.appState.updateResidentNotes(
+      _currentResident.id,
+      cleanNotes,
+    );
+    if (!updated || !mounted) return;
+
+    final refreshed = widget.appState.residentById(_currentResident.id);
+    if (refreshed != null) {
+      setState(() {
+        _currentResident = refreshed;
+      });
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Notes updated successfully.')),
+    );
+  }
+
+  Future<void> _confirmDischarge() async {
     final shouldDischarge = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -40,7 +139,7 @@ class ResidentDetailScreen extends StatelessWidget {
             size: 22,
           ),
         ),
-        title: Text('Discharge ${resident.name}?'),
+        title: Text('Discharge ${_currentResident.name}?'),
         content: const Text(
           'This removes the resident from active care and clears their open tasks and alerts.',
         ),
@@ -58,15 +157,15 @@ class ResidentDetailScreen extends StatelessWidget {
       ),
     );
 
-    if (shouldDischarge != true) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-    final removed = appState.dischargeResident(resident.id);
-    if (!removed) return;
+    if (!mounted || shouldDischarge != true) return;
 
-    navigator.pop(true);
-    messenger.showSnackBar(
-      SnackBar(content: Text('${resident.name} discharged.')),
+    final name = _currentResident.name;
+    final removed = widget.appState.dischargeResident(_currentResident.id);
+    if (!removed || !mounted) return;
+
+    Navigator.of(context).pop(true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$name discharged.')),
     );
   }
 
@@ -112,7 +211,7 @@ class ResidentDetailScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            resident.name,
+                            _currentResident.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -123,7 +222,7 @@ class ResidentDetailScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Room ${resident.room}  •  ${resident.age} yrs',
+                            'Room ${_currentResident.room}  •  ${_currentResident.age} yrs',
                             style: const TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 12,
@@ -132,12 +231,12 @@ class ResidentDetailScreen extends StatelessWidget {
                           const SizedBox(height: 9),
                           Row(
                             children: [
-                              ResidentStatusChip(status: resident.status),
+                              ResidentStatusChip(status: _currentResident.status),
                               if (compact) ...[
                                 const Spacer(),
                                 _DischargeButton(
                                   compact: true,
-                                  onPressed: () => _confirmDischarge(context),
+                                  onPressed: _confirmDischarge,
                                 ),
                               ],
                             ],
@@ -158,7 +257,7 @@ class ResidentDetailScreen extends StatelessWidget {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            resident.name
+                            _currentResident.name
                                 .split(' ')
                                 .where((part) => part.isNotEmpty)
                                 .take(2)
@@ -177,7 +276,7 @@ class ResidentDetailScreen extends StatelessWidget {
                         if (!compact) ...[
                           const SizedBox(width: 12),
                           _DischargeButton(
-                            onPressed: () => _confirmDischarge(context),
+                            onPressed: _confirmDischarge,
                           ),
                         ],
                       ],
@@ -189,9 +288,13 @@ class ResidentDetailScreen extends StatelessWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  _OverviewTab(resident: resident, dob: _date(resident.dateOfBirth)),
-                  _MedicationTab(resident: resident),
-                  _CarePlanTab(resident: resident),
+                  _OverviewTab(
+                    resident: _currentResident,
+                    dob: _date(_currentResident.dateOfBirth),
+                    onEditNotes: _editNotes,
+                  ),
+                  _MedicationTab(resident: _currentResident),
+                  _CarePlanTab(resident: _currentResident),
                 ],
               ),
             ),
@@ -244,8 +347,13 @@ class _DischargeButton extends StatelessWidget {
 class _OverviewTab extends StatelessWidget {
   final Resident resident;
   final String dob;
+  final VoidCallback onEditNotes;
 
-  const _OverviewTab({required this.resident, required this.dob});
+  const _OverviewTab({
+    required this.resident,
+    required this.dob,
+    required this.onEditNotes,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -285,6 +393,24 @@ class _OverviewTab extends StatelessWidget {
         _InfoCard(
           title: 'Notes',
           icon: Icons.notes_rounded,
+          action: TextButton.icon(
+            onPressed: onEditNotes,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            icon: const Icon(Icons.edit_outlined, size: 14),
+            label: const Text(
+              'Edit',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
+          ),
           children: [
             Text(
               resident.notes,
@@ -427,8 +553,14 @@ class _InfoCard extends StatelessWidget {
   final String title;
   final IconData icon;
   final List<Widget> children;
+  final Widget? action;
 
-  const _InfoCard({required this.title, required this.icon, required this.children});
+  const _InfoCard({
+    required this.title,
+    required this.icon,
+    required this.children,
+    this.action,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -442,7 +574,16 @@ class _InfoCard extends StatelessWidget {
               children: [
                 Icon(icon, color: AppColors.primary, size: 20),
                 const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                if (action != null) action!,
               ],
             ),
             const SizedBox(height: 14),
