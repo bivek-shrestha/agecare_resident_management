@@ -1,7 +1,6 @@
 # AgeCare Resident Management System — Flutter 
 
-AgeCare is a cross-platform Flutter frontend for aged-care staff. The project follows the supplied AgeCare prototype structure while improving responsiveness, visual consistency, navigation, and the complex admission workflow required by the assessment rubric.
-
+AgeCare is a cross-platform Flutter frontend for aged-care staff. The project follows the supplied AgeCare prototype structure while improving responsiveness, visual consistency, navigation.
 
 ## Latest UI update 
 
@@ -10,13 +9,13 @@ Notifications, Alerts, Residents and Messages now share a consistent rounded-car
 
 ## Latest visual and usability update 
 
-The Home screen no longer contains the large Care dashboard banner. Resident cards now use clear status-based colour accents, and Notifications use visible colour-coded type labels for high/review/info alerts and urgent/care/routine tasks. Colour is always paired with text and icons for accessibility.
+Resident cards use clear status-based colour accents, and Notifications use visible colour-coded type labels for high/review/info alerts and urgent/care/routine tasks. Colour is always paired with text and icons for accessibility.
 
 ## Demo login
 
 The app now starts on a staff login screen.
 
-- **Email:** `staff@agecare.com.au`
+- **Email:** `20036498.bivek@agecarekoi.com.au`
 - **Password:** `agecare123`
 
 Authentication is intentionally simulated because this assessment is a frontend implementation. The form still includes validation, password visibility, remember-me UI and a password-reset information flow.
@@ -25,7 +24,7 @@ Authentication is intentionally simulated because this assessment is a frontend 
 
 ### 1. Resident management
 
-- Dashboard resident search now works: type a name, room or resident ID and press the arrow/search action or keyboard Search.
+- Dashboard resident search: type a name, room or resident ID and press the arrow/search action or keyboard Search.
 - The search opens the Residents page with the query already applied.
 - Residents page has been simplified as requested: the Total Residents / New Admission / High Priority / Discharge statistic boxes were removed from this page.
 - Search supports resident name, room, ID, doctor and care level.
